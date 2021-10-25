@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
+  Button,
   View,
   Modal,
   Image,
@@ -13,54 +14,51 @@ import {
 import { useNavigation } from "@react-navigation/core";
 import { database } from "../firebase";
 import tw from "tailwind-react-native-classnames";
-import {ref} from '../firebase';
-import {auth} from '..firebase';
+import { auth } from "../firebase";
+import { ref } from '../firebase';
 
-export default function review({route}) {
+export default function review() {
   const [title, setTitle] = useState("");
   const [pass, setPass] = useState("");
   const [contents, setContents] = useState("");
-  const [rating, setRating]=useState("");
-  // 데이터 불러오기
-  const [id] = useState(auth.currentUser.email.split('@')[0]);
-  const navigation = useNavigation();
+  const [id] = useState(auth.currentUser?.email.split('@')[0]);
   const [img, setImg] = useState('');
+  const [rating, setRating] = useState("");
+  
+  // 데이터 불러오기
+  const navigation = useNavigation();
 
-  ref.child('test/driver2.jpeg').getDownloadURL().then(function(url) {
+  ref.child('test/driver2.jpeg').getDownloadURL().then(function (url) {
     var xhr = new XMLHttpRequest();
     xhr.responseType = 'blob';
-    xhr.onload = function(event) {
+    xhr.onload = function (event) {
       var blob = xhr.response;
     };
     xhr.open('GET', url);
     xhr.send();
     setImg(url);
-  }).catch(function(error) {
+  }).catch(function (error) {
     console.error(error);
   });
 
   function reviewlist() {
-    var key = route.params;
-    var postData = {
-      title: title,
-      contents : contents,
-      pass : pass,
-      rating : rating,
-      regdate : new Date(+new Date() + 3240 * 10000).toISOString().replace("T", " ").replace(/\..*/, '')
-    }
-    var updates = {};
-    updates[`리뷰목록/${id}/` + key] = postData;
-
-    return database.ref().update(updates);
+    database
+      .ref(`리뷰목록/${id}`)
+      .push({
+        title: title,
+        pass: pass,
+        contents: contents,
+        rating: rating,
+        regdate: new Date(+new Date() + 3240 * 10000).toISOString().replace("T", " ").replace(/\..*/, ''),
+      });
   }
 
-  /////////////////////////////////////////////////////////////////////////////////////////////////
   // Modal useState
   const [visible, setVisible] = useState(false);
 
   // Rating Component
-  const [defaultRating, setDefaultRating] = useState(2);
-  const [maxRating, setmaxRating] = useState([1, 2, 3, 4, 5]);
+  const [defaultRating, setDefaultRating] = useState('2');
+  const [maxRating] = useState(['1', '2', '3', '4', '5']);
 
   const starImgFilled = "../assets/star_filled.png";
   const starImgCorner = "../assets/star_corner.png";
@@ -68,7 +66,7 @@ export default function review({route}) {
   const CustomRatingBar = () => {
     return (
       <View style={styles.customRatingBarStyle}>
-        {maxRating.map((items, key) => {
+        {maxRating.map((items) => {
           return (
             <TouchableOpacity
               activeOpacity={0.7}
@@ -128,90 +126,90 @@ export default function review({route}) {
       </Modal>
     );
   };
-  //////////////////////////////////////////////////////////////////////
+
   return (
-      <SafeAreaView>
-        <View>
-          <TextInput
-            placeholder="title"
-            value={title}
-            onChangeText={(text) => setTitle(text)}
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="pass"
-            value={pass}
-            onChangeText={(text) => setPass(text)}
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="contents"
-            value={contents}
-            onChangeText={(text) => setContents(text)}
-            style={styles.inputReview}
-            multiline={true}
-          />
-          <View style={styles.center}>
-            <TouchableOpacity>
+    <SafeAreaView>
+      <View style={{ marginTop: '10%' }}>
+        <TextInput
+          placeholder="title"
+          value={title}
+          onChangeText={(text) => setTitle(text)}
+          style={styles.input}
+        />
+        <TextInput
+          placeholder="pass"
+          value={pass}
+          onChangeText={(text) => setPass(text)}
+          style={styles.input}
+        />
+        <TextInput
+          placeholder="contents"
+          value={contents}
+          onChangeText={(text) => setContents(text)}
+          style={styles.inputReview}
+        // multiline={true} => ios 상단배치
+        // style={{textAlignVertical: "top"}} =>
+        />
+        <TextInput value={rating} style={{ width: 0, height: 0 }} />
+        <View style={styles.center}>
+          <TouchableOpacity>
             <ModalOptions visible={visible}>
-    <View style={{ alignItems: 'center' }}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => setVisible(false)}>
-          <Image
-            source={require("../assets/x.png")}
-            style={{ height: 30, width: 30 }} />
-        </TouchableOpacity>
-      </View>
-    </View>
-    <View style={{ alignItems: 'center' }}>
-      <Image
-        source={{uri: img}}
-        style={{ height: 150, width: 150, marginVertical: 10 }}
-      />
-    </View>
-    <Text style={{ marginVertical: 30, fontSize: 15, textAlign: 'center', fontWeight: 'bold' }}>
-      Good Bye!{"\n"}How was your trip?
-    </Text>
-    <CustomRatingBar />
-    <Text style={styles.textStyle}>
-      {defaultRating + ' / ' + maxRating.length}
-    </Text>
-    <TouchableOpacity
-      activeOpacity={0.7}
-      style={styles.buttonStyle}
-      onPress={() => {
-        setRating(defaultRating);
-        setVisible(false);
-      }}
-    >
-      <Text
-        style={tw`text-white font-semibold text-lg`}
-      >
-        Rating
-      </Text>
-    </TouchableOpacity>
-  </ModalOptions>
-              <TouchableOpacity style={styles.button2} onPress={() => setVisible(true)}>
-                 <Text style={styles.text}>별점 주기</Text>
-                </TouchableOpacity>
+              <View style={{ alignItems: 'center' }}>
+                <View style={styles.header}>
+                  <TouchableOpacity onPress={() => setVisible(false)}>
+                    <Image
+                      source={require("../assets/x.png")}
+                      style={{ height: 30, width: 30 }} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <View style={{ alignItems: 'center' }}>
+                <Image
+                  source={{ uri: img }}
+                  style={{ height: 150, width: 150, marginVertical: 10 }}
+                />
+              </View>
+              <Text style={{ marginVertical: 30, fontSize: 15, textAlign: 'center', fontWeight: 'bold' }}>
+                운행은 편한 하셨는지요?
+              </Text>
+              <CustomRatingBar />
+              <Text style={styles.textStyle}>
+                {defaultRating + ' / ' + maxRating.length}
+              </Text>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                style={styles.buttonStyle}
+                onPress={() => {
+                  setRating(defaultRating);
+                  setVisible(false);
+                }}
+
+              >
+                <Text
+                  style={tw`text-white font-semibold text-lg`}
+                >
+                  Rating
+                </Text>
+              </TouchableOpacity>
+            </ModalOptions>
+            <TouchableOpacity style={styles.button2} onPress={() => setVisible(true)}>
+              <Text style={styles.text}>별점 주기</Text>
             </TouchableOpacity>
-          </View>
-            
+          </TouchableOpacity>
         </View>
         <View>
-        <TouchableOpacity
-              style={styles.button}
-              onPress={() => {
-                reviewlist();
-                navigation.navigate("ReviewList");
-              }}
-            >
-              <Text style={styles.text}>저장</Text>
-             
-            </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => {
+              reviewlist();
+              navigation.navigate("ReviewList");
+            }}
+          >
+            <Text style={styles.text}>저장</Text>
+          </TouchableOpacity>
         </View>
-        
-      </SafeAreaView>
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -238,6 +236,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     paddingHorizontal: 15,
     paddingVertical: 10,
+    textAlignVertical: "top",
   },
   center: {
     alignItems: "center",
@@ -246,12 +245,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 8,
     width: 300,
-    height: 38,
     backgroundColor: "black",
     borderRadius: 10,
+    left: 48,
     marginTop: 10,
-    top: -70,
-    left: 45
   },
   button2: {
     alignItems: "center",
@@ -263,7 +260,6 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 16,
-    lineHeight: 21,
     fontWeight: "bold",
     letterSpacing: 0.25,
     color: "white",
